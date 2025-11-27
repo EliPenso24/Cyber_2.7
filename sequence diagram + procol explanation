@@ -1,98 +1,16 @@
-Participant,Action
-User,→ Client: Input: DIR /path
-Client,"→ Protocol: create_request(CMD_DIR, {path: /path})"
-Protocol,"→ Client: JSON_Request<DIR, params>"
-Client,"→ Server: JSON_Request<DIR, params>"
-Server,→ Protocol: parse_message(request)
-Server,: Internal: cmd_dir() executes glob.glob()
-Server,"→ Protocol: create_response(SUCCESS, message, {files: []})"
-Protocol,"→ Server: JSON_Response<SUCCESS, data>"
-Server,"→ Client: JSON_Response<SUCCESS, data>"
-Client,→ Protocol: parse_message(response)
-Client,→ User: Output: Success. Found N files...
-
-Participant,Action
-User,→ Client: Input: DELETE file.txt
-Client,"→ Protocol: create_request(CMD_DELETE, {file_path: file.txt})"
-Protocol,"→ Client: JSON_Request<DELETE, params>"
-Client,"→ Server: JSON_Request<DELETE, params>"
-Server,→ Protocol: parse_message(request)
-Server,: Internal: cmd_delete() executes os.remove()
-Server,"→ Protocol: create_response(SUCCESS/ERROR, message)"
-Protocol,"→ Server: JSON_Response<STATUS, message>"
-Server,"→ Client: JSON_Response<STATUS, message>"
-Client,→ Protocol: parse_message(response)
-Client,→ User: Output: Status and message
-
-Participant,Action
-User,→ Client: Input: COPY src dest
-Client,"→ Protocol: create_request(CMD_COPY, {source: src, destination: dest})"
-Protocol,"→ Client: JSON_Request<COPY, params>"
-Client,"→ Server: JSON_Request<COPY, params>"
-Server,→ Protocol: parse_message(request)
-Server,: Internal: cmd_copy() executes shutil.copy()
-Server,"→ Protocol: create_response(SUCCESS/ERROR, message)"
-Protocol,"→ Server: JSON_Response<STATUS, message>"
-Server,"→ Client: JSON_Response<STATUS, message>"
-Client,→ Protocol: parse_message(response)
-Client,→ User: Output: Status and message
-
-Participant,Action
-User,→ Client: Input: EXECUTE program.exe
-Client,"→ Protocol: create_request(CMD_EXECUTE, {program_path: program.exe})"
-Protocol,"→ Client: JSON_Request<EXECUTE, params>"
-Client,"→ Server: JSON_Request<EXECUTE, params>"
-Server,→ Protocol: parse_message(request)
-Server,: Internal: cmd_execute() executes subprocess.Popen()
-Server,"→ Protocol: create_response(SUCCESS/ERROR, message)"
-Protocol,"→ Server: JSON_Response<STATUS, message>"
-Server,"→ Client: JSON_Response<STATUS, message>"
-Client,→ Protocol: parse_message(response)
-Client,→ User: Output: Status and message
-
-Participant,Action
-User,→ Client: Input: SCREENSHOT
-Client,"→ Protocol: create_request(CMD_SCREENSHOT, {save_path: screen.jpg})"
-Protocol,"→ Client: JSON_Request<SCREENSHOT, params>"
-Client,"→ Server: JSON_Request<SCREENSHOT, params>"
-Server,→ Protocol: parse_message(request)
-Server,: Internal: cmd_screenshot() executes pyautogui.screenshot()
-Server,"→ Protocol: create_response(SUCCESS/ERROR, message, {path: screen.jpg})"
-Protocol,"→ Server: JSON_Response<STATUS, data>"
-Server,"→ Client: JSON_Response<STATUS, data>"
-Client,→ Protocol: parse_message(response)
-Client,→ User: Output: Status and message (Path: screen.jpg)
-
-Participant,Action
-User,→ Client: Input: SEND_PHOTO file.jpg
-Client,"→ Protocol: create_request(CMD_SEND_PHOTO, {image_path: file.jpg})"
-Protocol,"→ Client: JSON_Request<SEND_PHOTO, params>"
-Client,"→ Server: JSON_Request<SEND_PHOTO, params>"
-Server,→ Protocol: parse_message(request)
-Server,": Internal: cmd_send_photo() reads file, gets binary_data, and size"
-Server,"→ Protocol: create_response(SUCCESS, message, {size: N}) (Step 1: Text Response)"
-Protocol,"→ Server: JSON_Response<SUCCESS, {size: N}>"
-Server,"→ Client: JSON_Response<SUCCESS, {size: N}>"
-Client,→ Protocol: parse_message(response)
-Client,: Internal: Reads size=N from response
-Client,← Server: Protocol: send_binary(binary_data) (Step 2: Binary Data)
-Client,: Internal: Protocol.receive_binary(N) saves data to result['binary']
-Client,→ User: Output: Success. Photo saved locally.
-Client,: Internal: Client saves result['binary'] to sentscreen.jpg
-
-Participant,Action
-User,→ Client: Input: EXIT
-Client,→ Protocol: create_request(CMD_EXIT)
-Protocol,→ Client: JSON_Request<EXIT>
-Client,→ Server: JSON_Request<EXIT>
-Server,→ Protocol: parse_message(request)
-Server,"→ Protocol: create_response(SUCCESS, Goodbye)"
-Protocol,"→ Server: JSON_Response<SUCCESS, Goodbye>"
-Server,"→ Client: JSON_Response<SUCCESS, Goodbye>"
-Server,: Internal: Server closes client socket
-Client,→ Protocol: parse_message(response)
-Client,: Internal: Client.disconnect() closes client socket
-Client,→ User: Output: Goodbye. Disconnected.
+link to sequence diagram:
+https://www.websequencediagrams.com/cgi-bin/cdraw?lz=dGl0bGUgc2VxdWVuY2VEaWFncmFtCgogICAgcGFydGljaXBhbnQgVXNlcgAEEUNsaWVudAAbEVByb3RvY29sADQRU2VydmVyAFcGJSUgRElSIENvb
+W1hbmQAawVVc2VyLT4-AFAGOiBJbnB1dDoAIQUvcGF0aACBDwUAbQYtPj4AXQg6IGNyZWF0ZV9yZXF1ZXN0KENNRF9ESVIsIHtwYXRoOgA2Bn0pAIFNBQCBEggAWwtKU09OX1IANgY8ADMFcGFyYW1zPgBhDgCBNQYADyAA
+gVsGAIERDXBhcnNlX21lc3NhZ2UoAIEeBwCBCAYAJwcAUwtJbnRlcm5hbDogY21kX2RpcigpIGV4ZWN1dGVzIGdsb2IuZ2xvYigAMg0AgXYVc3BvbnNlKFNVQ0NFU1MsIAB5Bywge2ZpbGVzOiBbXQCCARIAgVUPAD4GPAA
+7CWRhdGEAgVgPAII2DwAYGgCDJBMAggkQAIEtBgCDIgYAg10JVXNlcjogT3V0AIQGBVN1Y2Nlc3MuIEZvdW5kIE4gAIFIBS4uLgCESQpFTEVURQCEMiQAIwZmaWxlLnR4AIU-BgCENScAXgUAgkMHXwCEXgYAPwgAhD8oAD
+wHAIQ_KwAfEwCEHk9lbGV0ZQCEZAxvcy5yZW1vdmUAhD8xL0VSUk9SAIRtCQCEQShUQVRVAIUiCgCERSYAIBQAhCZHdGF0dXMgYW5kAIY2CACJMAlDT1BZAIkXIwAiBXNyYyBkZXMAhDYsQ09QWSwge3NvdXJjZTogc3JjL
+AA-BWluYXRpb246AEsFAIkrJwBGBgCJKSoAHhIAiQZOY29weQCJSQxzaHV0aWwuABEGAIJYgg9FWEVDVQCJKSUAIghwcm9ncmFtLmV4ZQCOAysAYQcsIHsAOQcAiU8HAEMLAI4ZJwBBCQCOGioAHhUAjXpOAI47BwCEag11
+YnBybwCMSAVQb3BlbgCHUoIRU0NSRUVOU0hPVACTACMAIwoAknkrAFgKLCB7c2F2AI5ECHNjcmVlbi5qcGcAkw4nAD0MAJMSKgAeGACSdU4AgUcGc2hvdACTPgxweWF1dG9ndWkuABQMAI4nPgCVZwkAgiQcAI5bHgCTNyo
+AIBEAjhtYIChQAIQGDykAhRkKRU5EX1BIT1RPAJg-CCAoQmluYXJ5IFRyYW5zZmVyAJdwBgCFHhcANQoAlAEFanBnAIUSLAB0CSwge2ltYWcAk34NAIUSKwA9CwCFEisAHxcAhG5PZW5kX3Bob3RvKCkgcmVhZHMAlmwFLC
+BnZXRzIGIAgmYFX2RhdGEsAJIhBXNpegCMcAYAmGM2c2l6ZTogTn0pIChTdGVwIDE6IFRleHQgAJkBCACYfzAASAkAmQYuACgPAJkDNgCdOQ0Am0sIUgCCPQVzaXplPU4gZnJvbSAAmyAIAJo_FgCdWAoAgwQFAIJqBigAg
+mwLAIIiCDI6IACFcQdEYXRhAGciAJ8YCC5yZWNlaXZlAFMITikgc2F2ZXMAm2UFIHRvIHJlc3VsdFsnAINlBiddAJp3JVBob3RvAEQFZCBsb2NhbGx5LgCBeyEAoEQGAHgHAGcQIHRvIHNlbnQAjBAKAJIYC0kAjRgJIChEa
+XNjb25uZWN0aW9uAIdgHEVYSQCMfyxFWElUAJFZKElUAJFQJgAgCACffjUAn08lR29vZGJ5AIYHMQAwBwCfPC4AIRQAoUMVAKN9BiBjbG9zZXMgYwCDcAdvY2tlAJ5rGQCGODgApRgGLmQAhAwJKCkAVSMAoGQOAII9By4gA
+IRRCmVkLg&s=default
 
 The Protocol serves as the system's communication standard,
 acting as both a translator and packager for actions and responses over the TCP network connection.
