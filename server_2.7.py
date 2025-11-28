@@ -49,32 +49,33 @@ class FileOperationsServer:
             self.socket.listen(1)
             self.running = True
             logging.info("Server listening on %s:%d" % (self.host, self.port))
+
+            print("=" * 60)
+            print(f"[SERVER] File Operations Server Started")
+            print(f"[SERVER] Listening on {self.host}:{self.port}")
+            print("=" * 60)
+            logging.info(f"Listening on {self.host}:{self.port}")
+
+            while self.running:
+                try:
+                    client_socket, address = self.socket.accept()
+                    logging.info(f"New connection from {address}")
+                    print(f"\n[SERVER] New connection from {address}")
+                    self.handle_client(client_socket, address)
+
+                except KeyboardInterrupt:
+                    logging.info("Server interrupted, shutting down")
+                    print("\n[SERVER] Server shutting down...")
+                    break
+
+                except Exception as e:
+                    logging.info(f"Server error: {e}")
+                    print(f"[SERVER] Error: {e}")
+
         except socket.error as msg:
             print(f"[ERROR] {msg}")
             self.running = False
             logging.error("[ERROR] Could not start server")
-
-        print("=" * 60)
-        print(f"[SERVER] File Operations Server Started")
-        print(f"[SERVER] Listening on {self.host}:{self.port}")
-        print("=" * 60)
-        logging.info(f"Listening on {self.host}:{self.port}")
-
-        while self.running:
-            try:
-                client_socket, address = self.socket.accept()
-                logging.info(f"New connection from {address}")
-                print(f"\n[SERVER] New connection from {address}")
-                self.handle_client(client_socket, address)
-
-            except KeyboardInterrupt:
-                logging.info("Server interrupted, shutting down")
-                print("\n[SERVER] Server shutting down...")
-                break
-
-            except Exception as e:
-                logging.info(f"Server error: {e}")
-                print(f"[SERVER] Error: {e}")
 
         self.socket.close()
         logging.info("Server socket closed")
