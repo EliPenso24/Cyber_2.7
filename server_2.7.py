@@ -5,7 +5,7 @@ File Operations Server that listens for client commands and executes
 file-related operations using the Protocol class for communication.
 
 Date: 23.11.25
-Author:Eli Penso
+Author: Eli Penso
 """
 
 import socket
@@ -24,10 +24,10 @@ class FileOperationsServer:
     Server to receive and execute file operation commands from clients.
     """
 
+    # NOTE: __init__ MUST NOT be static. It needs 'self'.
     def __init__(self, host='127.0.0.1', port=6767):
         """
         Initialize server socket and host/port settings.
-
         Args:
             host (str): Host IP to bind.
             port (int): Port to listen on.
@@ -37,20 +37,27 @@ class FileOperationsServer:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.running = False
 
+
     def start(self):
         """
         Start the server and listen for client connections.
         Handles KeyboardInterrupt and errors gracefully.
         """
         logging.info("Server starting")
-        self.socket.bind((self.host, self.port))
-        self.socket.listen(1)
-        self.running = True
+        try:
+            self.socket.bind((self.host, self.port))
+            self.socket.listen(1)
+            self.running = True
+            logging.info("Server listening on %s:%d" % (self.host, self.port))
+        except socket.error as msg:
+            print(f"[ERROR] {msg}")
+            self.running = False
+            logging.error("[ERROR] Could not start server")
 
-        print("="*60)
+        print("=" * 60)
         print(f"[SERVER] File Operations Server Started")
         print(f"[SERVER] Listening on {self.host}:{self.port}")
-        print("="*60)
+        print("=" * 60)
         logging.info(f"Listening on {self.host}:{self.port}")
 
         while self.running:
@@ -72,10 +79,10 @@ class FileOperationsServer:
         self.socket.close()
         logging.info("Server socket closed")
 
+
     def handle_client(self, client_socket, address):
         """
         Handle requests from a connected client.
-
         Args:
             client_socket (socket.socket): Connected client socket.
             address (tuple): Client address (IP, port).
@@ -114,6 +121,7 @@ class FileOperationsServer:
                     print(f"[SERVER] Executing: {command}")
                     logging.info(f"Executing command: {command}")
 
+                    # Calls instance methods like self.cmd_dir
                     result = self.execute_command(command, request.get('params', {}))
 
                     response = Protocol.create_response(
@@ -145,7 +153,9 @@ class FileOperationsServer:
 
                 try:
                     client_socket.send(error_response.encode('utf-8'))
-                except:
+                except socket.error as e:
+                    print(f"Error sending error:{e}")
+                    logging.info(f"Error sending error: {e}")
                     pass
                 break
 
@@ -153,14 +163,13 @@ class FileOperationsServer:
         logging.info(f"Connection closed with {address}")
         print(f"[SERVER] Connection closed with {address}")
 
+
     def execute_command(self, command, params):
         """
         Execute the requested command.
-
         Args:
             command (str): Command to execute.
             params (dict): Parameters for the command.
-
         Returns:
             dict: Dictionary with status, message, and optional data.
         """
@@ -193,13 +202,13 @@ class FileOperationsServer:
 
     # ============== Command Implementations ==============
 
-    def cmd_dir(self, path):
+
+    @staticmethod
+    def cmd_dir(path):
         """
         List files in a directory.
-
         Args:
             path (str): Directory path.
-
         Returns:
             dict: Status, message, and file list.
         """
@@ -217,13 +226,12 @@ class FileOperationsServer:
         except Exception as e:
             return {'status': Protocol.STATUS_ERROR, 'message': str(e), 'data': {'files': []}}
 
-    def cmd_delete(self, file_path):
+    @staticmethod
+    def cmd_delete(file_path):
         """
         Delete a specified file.
-
         Args:
             file_path (str): File to delete.
-
         Returns:
             dict: Status and message.
         """
@@ -240,14 +248,14 @@ class FileOperationsServer:
         except Exception as e:
             return {'status': Protocol.STATUS_ERROR, 'message': str(e)}
 
-    def cmd_copy(self, source, destination):
+
+    @staticmethod
+    def cmd_copy(source, destination):
         """
         Copy a file from source to destination.
-
         Args:
             source (str): Source file path.
             destination (str): Destination path.
-
         Returns:
             dict: Status and message.
         """
@@ -256,21 +264,20 @@ class FileOperationsServer:
             if not source or not destination:
                 return {'status': Protocol.STATUS_ERROR, 'message': 'Missing source or destination'}
 
-            if os.path.exists(source):
+            if os.path.exists(source) and os.path.exists(destination):
                 shutil.copy(source, destination)
                 return {'status': Protocol.STATUS_SUCCESS, 'message': f'File copied: {source} -> {destination}'}
             else:
-                return {'status': Protocol.STATUS_ERROR, 'message': f'Source file does not exist: {source}'}
+                return {'status': Protocol.STATUS_ERROR, 'message': f'Source or Destination file does not exist: {source},{destination}\n I THINK YOU KNOW WHO IT IS!!!'}
         except Exception as e:
             return {'status': Protocol.STATUS_ERROR, 'message': str(e)}
 
-    def cmd_execute(self, program_path):
+    @staticmethod
+    def cmd_execute(program_path):
         """
         Execute a program at the specified path.
-
         Args:
             program_path (str): Path to the program.
-
         Returns:
             dict: Status and message.
         """
@@ -284,7 +291,8 @@ class FileOperationsServer:
         except Exception as e:
             return {'status': Protocol.STATUS_ERROR, 'message': str(e)}
 
-    def cmd_screenshot(self, save_path='screen.jpg'):
+    @staticmethod
+    def cmd_screenshot(save_path='screen.jpg'):
         """
         Take a screenshot and save it.
         Args:
@@ -302,7 +310,8 @@ class FileOperationsServer:
         except Exception as e:
             return {'status': Protocol.STATUS_ERROR, 'message': str(e)}
 
-    def cmd_send_photo(self, image_path):
+    @staticmethod
+    def cmd_send_photo(image_path):
         """
         Send a photo to the specified path.
         Args:
@@ -310,8 +319,7 @@ class FileOperationsServer:
         returns:
             dict: Status and message and data with path and binary data of the photo.
         """
-        if os.path.exists(image_path):
-            # Read the image file in binary mode
+        try:
             with open(image_path, 'rb') as f:
                 binary_data = f.read()
 
@@ -323,6 +331,10 @@ class FileOperationsServer:
                 'data': {'size': size},
                 'binary': binary_data  # Add binary data to return
             }
+        except Exception as e:
+            print (f"SEND_PHOTO failed, error message: {e}")
+            logging.info(f"SEND_PHOTO failed, error message: {e}")
+            return {'status': Protocol.STATUS_ERROR, 'message': str(e)} # Added return for error path
 
 
 def test_server_assertions():
@@ -331,19 +343,16 @@ def test_server_assertions():
     """
     server = FileOperationsServer()
 
-    # Check initialization
     assert server.host == '127.0.0.1'
     assert server.port == 6767
-    assert server.running == False
+    assert server.running is False
     assert server.socket is not None
 
-    # Check command execution returns dict
     response = server.execute_command('FAKE_COMMAND', {})
     assert isinstance(response, dict)
     assert 'status' in response
     assert 'message' in response
 
-    # Check that each command returns a dict even with invalid input
     assert isinstance(server.cmd_dir('non_existing_path'), dict)
     assert isinstance(server.cmd_delete(''), dict)
     assert isinstance(server.cmd_copy('', ''), dict)
@@ -375,9 +384,9 @@ def main():
     """
     Main entry point to run the server.
     """
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("FILE OPERATIONS SERVER")
-    print("="*60)
+    print("=" * 60)
 
     server = FileOperationsServer()
     try:
