@@ -31,8 +31,8 @@ def test_protocol_assertions():
     assert parsed_resp["status"] == Protocol.STATUS_SUCCESS
     assert parsed_resp["message"] == "OK"
     assert parsed_resp["data"] == {"files": []}
-    assert Protocol.validate_command(Protocol.CMD_DIR) == True
-    assert Protocol.validate_command("INVALID") == False
+    assert Protocol.validate_command(Protocol.CMD_DIR)
+    assert not Protocol.validate_command("INVALID")
     logging.info("protocol assertions passed")
     print("All protocol assertions passed")
 
@@ -59,6 +59,7 @@ class Protocol:
     # End-of-message marker
     MESSAGE_END = "<END>"
 
+    @staticmethod
     def send_binary(comm_socket, binary_data):
         """
         Send binary data (like image bytes) through socket.
@@ -71,6 +72,7 @@ class Protocol:
             sent += comm_socket.send(binary_data[sent:])
         logging.info(f"Sent {len(binary_data)} bytes of binary data")
 
+    @staticmethod
     def receive_binary(comm_socket, size):
         """
         Receive exact amount of binary data from socket.
@@ -89,6 +91,7 @@ class Protocol:
         logging.info(f"Received {len(binary_data)} bytes of binary data")
         return binary_data
 
+    @staticmethod
     def create_request(command, params=None):
         """
         Create a request message to send to the server.
@@ -102,6 +105,7 @@ class Protocol:
         logging.info("Request JSON created")
         return json.dumps(request) + Protocol.MESSAGE_END
 
+    @staticmethod
     def create_response(status, message, data=None):
         """
         Create a response message to send to the client.
@@ -116,6 +120,7 @@ class Protocol:
         logging.info("Response JSON created")
         return json.dumps(response) + Protocol.MESSAGE_END
 
+    @staticmethod
     def parse_message(message):
         """
         Parse a received message string into a dictionary.
@@ -129,6 +134,7 @@ class Protocol:
         logging.info("Message parsed successfully")
         return json.loads(cleaned)
 
+    @staticmethod
     def validate_command(command):
         """
         Check if a command is supported.

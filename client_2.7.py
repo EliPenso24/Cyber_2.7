@@ -112,42 +112,43 @@ class FileOperationsClient:
 
     # ============== User-friendly command methods ==============
 
-    def DIR(self, path):
+    def dir_command(self, path):
         """Send DIR command to list files in a directory."""
         logging.info(f"DIR called with path: {path}")
         return self.send_command(Protocol.CMD_DIR, {'path': path})
 
-    def DELETE(self, file_path):
+    def delete_command(self, file_path):
         """Send DELETE command to delete a file."""
         logging.info(f"DELETE called with file: {file_path}")
         return self.send_command(Protocol.CMD_DELETE, {'file_path': file_path})
 
-    def COPY(self, source, destination):
+    def copy_command(self, source, destination):
         """Send COPY command to copy a file."""
         logging.info(f"COPY called: {source} -> {destination}")
         return self.send_command(Protocol.CMD_COPY, {'source': source, 'destination': destination})
 
-    def EXECUTE(self, program_path):
+    def execute_command(self, program_path):
         """Send EXECUTE command to run a program."""
         logging.info(f"EXECUTE called with: {program_path}")
         return self.send_command(Protocol.CMD_EXECUTE, {'program_path': program_path})
 
-    def TAKE_SCREENSHOT(self, save_path='screen.jpg'):
+    def take_screenshot(self, save_path='screen.jpg'):
         """Send SCREENSHOT command to take a screenshot."""
         logging.info(f"SCREENSHOT called. Saving to: {save_path}")
         return self.send_command(Protocol.CMD_SCREENSHOT, {'save_path': save_path})
 
-    def SEND_PHOTO(self, image_path):
+    def send_photo(self, image_path):
         """Send SEND_PHOTO command to send an image file."""
         logging.info(f"SEND_PHOTO called with: {image_path}")
         return self.send_command(Protocol.CMD_SEND_PHOTO, {'image_path': image_path})
 
-    def EXIT(self):
+    def exit_command(self):
         """Send EXIT command and disconnect from server."""
         logging.info("EXIT command called.")
         result = self.send_command(Protocol.CMD_EXIT)
         self.disconnect()
         return result
+
 
 def test_client_assertions():
     """
@@ -156,7 +157,7 @@ def test_client_assertions():
     client = FileOperationsClient()
     assert client.host == '127.0.0.1'
     assert client.port == 6767
-    assert client.connected == False
+    assert client.connected is False
     assert client.socket is None
     response = client.send_command('FAKE_COMMAND')
     assert isinstance(response, dict)
@@ -178,17 +179,17 @@ def display_menu():
     Display the main menu to the user.
     """
     logging.info("Displaying menu to user.")
-    print("\n" + "="*24)
+    print("\n" + "=" * 24)
     print("FILE OPERATIONS CLIENT")
-    print("="*24)
-    print("1. DIR")
-    print("2. DELETE")
-    print("3. COPY")
-    print("4. EXECUTE")
-    print("5. SCREENSHOT")
-    print("6. SEND_PHOTO")
-    print("7. EXIT")
-    print("="*24)
+    print("=" * 24)
+    print("1. DIR -                        Displays files via given directory")
+    print("2. DELETE -                            Deletes file via given path")
+    print("3. COPY -              Copies file to another file via given paths")
+    print("4. EXECUTE -                    Executes command via given program")
+    print("5. SCREENSHOT -           Saves screenshot of screen to screen.jpg")
+    print("6. SEND_PHOTO - Saves sent data fron screen.jpg to sent_screen.jpg")
+    print("7. EXIT -                                        Exits the program")
+    print("=" * 24)
 
 
 def main():
@@ -196,9 +197,9 @@ def main():
     Main function to run the client.
     """
     logging.info("Client started.")
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("FILE OPERATIONS CLIENT")
-    print("="*60)
+    print("=" * 60)
 
     client = FileOperationsClient()
 
@@ -215,7 +216,7 @@ def main():
         if choice == '1':
             path = input("Enter directory path: ")
             logging.info(f"User input for DIR: {path}")
-            result = client.DIR(path)
+            result = client.dir_command(path)
             print(f"\n[{result['status'].upper()}] {result['message']}")
             if result['status'] == Protocol.STATUS_SUCCESS:
                 files = result.get('data', {}).get('files', [])
@@ -225,49 +226,42 @@ def main():
         elif choice == '2':
             file_path = input("Enter file path to delete: ")
             logging.info(f"User input for DELETE: {file_path}")
-            result = client.DELETE(file_path)
+            result = client.delete_command(file_path)
             print(f"\n[{result['status'].upper()}] {result['message']}")
 
         elif choice == '3':
             source = input("Enter source file path: ")
             destination = input("Enter destination file path: ")
             logging.info(f"User input for COPY: {source} -> {destination}")
-            result = client.COPY(source, destination)
+            result = client.copy_command(source, destination)
             print(f"\n[{result['status'].upper()}] {result['message']}")
 
         elif choice == '4':
             program = input("Enter program to execute: ")
             logging.info(f"User input for EXECUTE: {program}")
-            result = client.EXECUTE(program)
+            result = client.execute_command(program)
             print(f"\n[{result['status'].upper()}] {result['message']}")
 
         elif choice == '5':
             logging.info("User selected SCREENSHOT")
-            result = client.TAKE_SCREENSHOT('screen.jpg')
+            result = client.take_screenshot('screen.jpg')
             print(f"\n[{result['status'].upper()}] {result['message']}")
 
         elif choice == '6':
-
             logging.info("User selected SEND_PHOTO")
-
-            result = client.SEND_PHOTO('screen.jpg')
-
-            print(f"\n[{result['status'].upper()}] {result['message']}")
+            result = client.send_photo('screen.jpg')
 
             if 'binary' in result:
-
-                with open('sentscreen.jpg', 'wb') as f:
-
+                with open('sent_screen.jpg', 'wb') as f:
                     f.write(result['binary'])
-
-                print(f"  Photo saved as sentscreen.jpg")
-
-                logging.info("Photo saved to sentscreen.jpg")
+                print(f"\n[{result['status'].upper()}]  Photo saved as sent_screen.jpg")
+                logging.info("Photo saved to sent_screen.jpg")
 
         elif choice == '7':
             logging.info("User selected EXIT")
-            result = client.EXIT()
-            print(f"\n[{result['status'].upper()}] {result['message']}")
+            result = client.exit_command()
+            print(f"\n[{result['status'].upper()}] {result['message']}\n I hope you enjoyed! ;) ")
+
             break
 
         else:
