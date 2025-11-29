@@ -196,6 +196,7 @@ def init_logs():
     """
     os.makedirs("LOGS", exist_ok=True)
     logging.basicConfig(filename='LOGS/client.log', filemode='w', level=logging.INFO)
+    logging.info("Initializing logging to LOGS/client.log.")
 
 
 def display_menu():
