@@ -386,6 +386,7 @@ def init_logs():
     """
     os.makedirs("LOGS", exist_ok=True)
     logging.basicConfig(filename='LOGS/server.log', filemode='w', level=logging.INFO)
+    logging.info("Initializing logging to LOGS/client.log.")
 
 
 def main():
