@@ -1,9 +1,36 @@
-The Protocol serves as the system's communication standard,
-acting as both a translator and packager for actions and responses over the TCP network connection.
-For client actions, the Protocol consistently packages the command (e.g., DIR, DELETE, COPY) along
-with any necessary variables (zero to two, such as file paths) into a structured JSON Request.
-Upon execution by the server's function handler, the server uses the Protocol to format the result
-into a JSON Response, which includes a status (success or error), a descriptive message, and any resulting data.
-Crucially, when a client requests a file using the SEND_PHOTO command, the server first sends a JSON Response
-containing the requested file's exact size in bytes (N), and only then uses the Protocol to perform a separate,
-dedicated transfer of the raw binary data (the file itself) to ensure efficient file transmission.
+My protocol establishes a JSON-based control plane for file operations,
+ensuring reliable communication through a consistent message structure.
+Every message, whether a request from the client or a response from the server,
+is a self-contained JSON string delimited by the <END> marker.
+Client requests use the command key to specify the desired action (e.g., DIR, DELETE),
+passing any necessary inputs within the params dictionary.
+This params dictionary supports zero, one, or two arguments.
+For example, the zero-parameter command EXIT requires only the command name;
+the one-parameter command DIR requires a path; and the two-parameter command
+COPY requires both source and destination paths.
+The server's response follows a similar JSON structure, using the status key
+("success" or "error")and a message.
+Crucially, operations involving files, such as SEND_PHOTO, use the JSON response
+to send metadata (like the file size),
+and then immediately follow up by transmitting the raw binary data over the same socket connection,
+separating control information from the bulk data transfer.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
