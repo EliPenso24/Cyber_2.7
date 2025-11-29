@@ -15,8 +15,15 @@ import logging
 
 def test_protocol_assertions():
     """
-    Simple assertions for Protocol class.
+Validates the Protocol's communication contract.
+
+    Checks:
+    1. Constants: Core protocol values are defined.
+    2. Format: Ensures JSON requests and responses are correctly generated.
+    3. Parsing: Verifies message strings are accurately converted to dictionaries.
+    4. Validation: Confirms command strings are correctly identified.
     """
+
     assert Protocol.STATUS_SUCCESS == "success"
     assert Protocol.STATUS_ERROR == "error"
     assert Protocol.MESSAGE_END == "<END>"

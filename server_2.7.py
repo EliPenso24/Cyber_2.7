@@ -44,38 +44,31 @@ class FileOperationsServer:
         Handles KeyboardInterrupt and errors gracefully.
         """
         logging.info("Server starting")
-        try:
-            self.socket.bind((self.host, self.port))
-            self.socket.listen(1)
-            self.running = True
-            logging.info("Server listening on %s:%d" % (self.host, self.port))
+        self.socket.bind((self.host, self.port))
+        self.socket.listen(1)
+        self.running = True
 
-            print("=" * 60)
-            print(f"[SERVER] File Operations Server Started")
-            print(f"[SERVER] Listening on {self.host}:{self.port}")
-            print("=" * 60)
-            logging.info(f"Listening on {self.host}:{self.port}")
+        print("=" * 60)
+        print(f"[SERVER] File Operations Server Started")
+        print(f"[SERVER] Listening on {self.host}:{self.port}")
+        print("=" * 60)
+        logging.info(f"Listening on {self.host}:{self.port}")
 
-            while self.running:
-                try:
-                    client_socket, address = self.socket.accept()
-                    logging.info(f"New connection from {address}")
-                    print(f"\n[SERVER] New connection from {address}")
-                    self.handle_client(client_socket, address)
+        while self.running:
+            try:
+                client_socket, address = self.socket.accept()
+                logging.info(f"New connection from {address}")
+                print(f"\n[SERVER] New connection from {address}")
+                self.handle_client(client_socket, address)
 
-                except KeyboardInterrupt:
-                    logging.info("Server interrupted, shutting down")
-                    print("\n[SERVER] Server shutting down...")
-                    break
+            except KeyboardInterrupt:
+                logging.info("Server interrupted, shutting down")
+                print("\n[SERVER] Server shutting down...")
+                break
 
-                except Exception as e:
-                    logging.info(f"Server error: {e}")
-                    print(f"[SERVER] Error: {e}")
-
-        except socket.error as msg:
-            print(f"[ERROR] {msg}")
-            self.running = False
-            logging.error("[ERROR] Could not start server")
+            except Exception as e:
+                logging.info(f"Server error: {e}")
+                print(f"[SERVER] Error: {e}")
 
         self.socket.close()
         logging.info("Server socket closed")
@@ -339,9 +332,23 @@ class FileOperationsServer:
 
 
 def test_server_assertions():
+
     """
-    Simple assertions for FileOperationsServer.
+    Validates the contract of all server components.
+
+    Checks:
+    1. Initialization: Confirms default host, port, and initial
+    running state are correct.
+    2. Dispatcher: Ensures the command dispatcher consistently
+    returns a structured dictionary.
+    3. Command Contract: Validates that all command handlers return
+    the required status and message keys.
+    4. Error Handling: Verifies that handlers correctly manage
+    error conditions like non-existent paths.
+    5. Binary Data: Checks the logic for including or excluding
+    the 'binary' key in the response based on file existence.
     """
+
     server = FileOperationsServer()
 
     assert server.host == '127.0.0.1'
@@ -358,7 +365,7 @@ def test_server_assertions():
     assert isinstance(server.cmd_delete(''), dict)
     assert isinstance(server.cmd_copy('', ''), dict)
     assert isinstance(server.cmd_execute(''), dict)
-    assert isinstance(server.cmd_screenshot('test.jpg'), dict)
+    assert isinstance(server.cmd_screenshot('assertion.jpg'), dict)
     response = server.cmd_send_photo('screen.jpg')
     assert isinstance(response, dict), "Response should be a dict"
     assert 'status' in response and 'message' in response
@@ -379,6 +386,7 @@ def init_logs():
     """
     os.makedirs("LOGS", exist_ok=True)
     logging.basicConfig(filename='LOGS/server.log', filemode='w', level=logging.INFO)
+    logging.info("Initializing logging to LOGS/client.log.")
 
 
 def main():
@@ -399,7 +407,7 @@ def main():
 
 
 if __name__ == "__main__":
-    test_server_assertions()
     protocol.test_protocol_assertions()
+    test_server_assertions()
     init_logs()
     main()

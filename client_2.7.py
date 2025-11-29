@@ -152,18 +152,42 @@ class FileOperationsClient:
 
 def test_client_assertions():
     """
-    Simple assertions for FileOperationsClient.
+    Validates the contract of all client components.
+
+    Checks:
+    1. Initialization: Confirms default host, port, and initial connection state are correct.
+    2. Disconnection Error: Verifies `send_command` returns an error status when not connected.
+    3. Command Wrappers: Ensures all user-friendly methods
+    (e.g., `dir_command`) return the expected disconnection error dictionary.
+    4. Final State: Confirms `exit_command` processes the request and ensures
+    the client's connection status is finalized.
     """
     client = FileOperationsClient()
+
     assert client.host == '127.0.0.1'
     assert client.port == 6767
     assert client.connected is False
     assert client.socket is None
+
     response = client.send_command('FAKE_COMMAND')
     assert isinstance(response, dict)
-    assert 'message' in response
-    logging.info("client assertions passed")
-    print("All assertions passed")
+    assert response.get('status') == Protocol.STATUS_ERROR
+
+    expected_error = {'status': Protocol.STATUS_ERROR, 'message': 'Not connected to server'}
+
+    assert client.dir_command('.') == expected_error
+    assert client.delete_command('a.txt') == expected_error
+    assert client.copy_command('a', 'b') == expected_error
+    assert client.execute_command('prog.exe') == expected_error
+    assert client.take_screenshot() == expected_error
+    assert client.send_photo('img.jpg') == expected_error
+
+    result = client.exit_command()
+    assert result == expected_error
+    assert client.connected is False
+
+    logging.info("Client assertions passed (tested contract without live connection).")
+    print("All client assertions passed (tested contract without live connection).")
 
 
 def init_logs():
@@ -172,6 +196,7 @@ def init_logs():
     """
     os.makedirs("LOGS", exist_ok=True)
     logging.basicConfig(filename='LOGS/client.log', filemode='w', level=logging.INFO)
+    logging.info("Initializing logging to LOGS/client.log.")
 
 
 def display_menu():
