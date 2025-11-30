@@ -36,6 +36,7 @@ class FileOperationsServer:
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.running = False
+        logging.info("Server socket created")
 
 
     def start(self):
@@ -407,7 +408,10 @@ def main():
 
 
 if __name__ == "__main__":
-    protocol.test_protocol_assertions()
-    test_server_assertions()
     init_logs()
+    logging.info("***Protocol Assertion***\n")
+    protocol.test_protocol_assertions()
+    logging.info("\n***Server Assertions***\n")
+    test_server_assertions()
+    logging.info("\n***Main***\n")
     main()

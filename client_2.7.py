@@ -295,6 +295,8 @@ def main():
 
 
 if __name__ == "__main__":
-    test_client_assertions()
     init_logs()
+    logging.info("***Client Assertions***\n")
+    test_client_assertions()
+    logging.info("\n***Main***\n")
     main()

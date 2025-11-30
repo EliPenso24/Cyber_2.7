@@ -1,36 +1,38 @@
-My protocol establishes a JSON-based control plane for file operations,
-ensuring reliable communication through a consistent message structure.
-Every message, whether a request from the client or a response from the server,
-is a self-contained JSON string delimited by the <END> marker.
-Client requests use the command key to specify the desired action (e.g., DIR, DELETE),
-passing any necessary inputs within the params dictionary.
-This params dictionary supports zero, one, or two arguments.
-For example, the zero-parameter command EXIT requires only the command name;
-the one-parameter command DIR requires a path; and the two-parameter command
-COPY requires both source and destination paths.
-The server's response follows a similar JSON structure, using the status key
-("success" or "error")and a message.
-Crucially, operations involving files, such as SEND_PHOTO, use the JSON response
-to send metadata (like the file size),
-and then immediately follow up by transmitting the raw binary data over the same socket connection,
-separating control information from the bulk data transfer.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+My protocol is based on JSON and its main focus is creating consistent
+communication between the client and the server. Every message ends with
+the <End> marker and is a JSON string.
+Client request are processed through the command key(e.g, DIR, DELETE),
+and the pass any inputs within the params dictionary.
+The protocol doesn't do anything to the params but simply "wraps" them
+for the server to than "unwrap" via the protocol.
+If the command is zero params like EXIT than the protocol will send the
+request and it will include the type: request,command:EXIT and the params:{}.
+The server will than receive the crucial parts of the sent request and
+respond accordingly via the response system in my protocol.
+The response system will send the status ("error" or "success") and a message
+after completing the desired request.
+If the command is one params like DIR than the protocol will send the request
+and it will include the type: request,command:DIR and the params:{directory}.
+The server will than receive the crucial parts of the sent request and respond
+accordingly via the response system in my protocol.
+The response system will send the status ("error" or "success"), a message and
+the files in the directory after completing the desired request.
+If the command is two params like COPY than the protocol will send the request
+and it will include the type: request,command:COPY and the params:{source,destination}.
+The server will than receive the crucial parts of the sent request and respond
+accordingly via the response system in my protocol.
+The response system will send the status ("error" or "success") and a message
+after completing the desired request.
+If the command is send_photo than the protocol will send the request and it will
+include the type: request,command:SEND_PHOTO and the params:{path}.
+The server will than receive the crucial parts of the sent request and respond
+accordingly via the binary response system in my protocol.
+The binary response system will send the status ("error" or "success") and a
+message after completing the desired request which is to send the binary data via
+send_binary in the protocol.
+After that the client will receive all the binary data through the receive_binary
+command in the protocol and than the client will write that data in to a sent_screen.jpg
+Both of the function send and receive binary use while loops to ensure that all the
+date is safely transfered.
+In addition the protocol uses parse message to take raw string and return a dictionary
+without the end marker and I use validate_command to ensure that commands are in fact valid.
